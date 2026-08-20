@@ -4,7 +4,6 @@
   --face: 150px;
   --seg: 30deg;
   --radius: 280px;
-  --scale: 1;
 }
 
 html {
@@ -128,18 +127,18 @@ body {
 /* Decoração
 ---------------------------------------- */
 #moldura {
-  width: calc(520px * var(--scale));
-  height: calc(520px * var(--scale));
-  border: calc(40px * var(--scale)) solid rgb(200, 0, 0);
-  border-radius: calc(300px * var(--scale));
+  height: 520px;
+  width: 520px;
+  border: 40px solid rgb(200, 0, 0);
+  border-radius: 300px;
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: calc(-300px * var(--scale));
-  margin-left: calc(-300px * var(--scale));
-  -webkit-transform: translateZ(calc(380px * var(--scale)));
-  -moz-transform: translateZ(calc(380px * var(--scale)));
-  transform: translateZ(calc(380px * var(--scale)));
+  margin-top: -300px;
+  margin-left: -300px;
+  -webkit-transform: translateZ(380px);
+  -moz-transform: translateZ(380px);
+  transform: translateZ(380px);
   box-shadow:
     inset -1px -2px 0px 3px rgb(150, 0, 0),
     inset -1px -2px 10px 10px rgba(0, 0, 0, 0.5),
@@ -148,23 +147,23 @@ body {
 }
 
 #piao-bg {
-  width: calc(580px * var(--scale));
-  height: calc(580px * var(--scale));
-  border-radius: calc(290px * var(--scale));
+  height: 580px;
+  width: 580px;
+  border-radius: 290px;
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: calc(-290px * var(--scale));
-  margin-left: calc(-290px * var(--scale));
+  margin-top: -290px;
+  margin-left: -290px;
   background-color: #222;
   -webkit-transform: translateZ(1px);
   -moz-transform: translateZ(1px);
   transform: translateZ(1px);
 }
 
+#play,
 #mute {
   position: absolute;
-  right: 20px;
   top: 20px;
   background-color: whiteSmoke;
   background-image: -webkit-linear-gradient(top, white, #DDD);
@@ -187,8 +186,17 @@ body {
   z-index: 100;
 }
 
+  #play { right: 20px; }
+  #mute { right: 96px; }
+
+  #play:hover,
   #mute:hover {
     box-shadow: 0 0 0px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  #mute.muted {
+    opacity: 0.45;
+    text-decoration: line-through;
   }
 
 #decoracao {

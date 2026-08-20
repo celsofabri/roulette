@@ -9,13 +9,6 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  // Calcula o raio e o passo angular de um prisma regular de N faces.
-  function computeGeometry(N, faceWidth) {
-    var radius = faceWidth / (2 * Math.tan(Math.PI / N));
-    var seg = 360 / N;
-    return { radius: radius, seg: seg };
-  }
-
   // Converte "nome-sobrenome.jpg" em "Nome Sobrenome" (sem acentos).
   function titleCaseFromFile(file) {
     var base = String(file).replace(/\.[^.]+$/, '');
@@ -54,20 +47,32 @@
     return active[idx];
   }
 
-  // Ângulo final para que a face `winner` fique de frente após `fullSpins` voltas.
+  // Ângulo final para que a face `winner` fique de frente após `fullSpins` voltas,
+  // girando no sentido decrescente (o mesmo do giro contínuo).
   function computeTargetAngle(winner, seg, currentAngle, fullSpins) {
     var targetMod = ((360 - winner * seg) % 360 + 360) % 360;
     var currentMod = ((currentAngle % 360) + 360) % 360;
-    var delta = (targetMod - currentMod + 360) % 360;
-    return currentAngle + fullSpins * 360 + delta;
+    var delta = ((currentMod - targetMod) % 360 + 360) % 360;
+    if (delta === 0) delta = 360;
+    return currentAngle - fullSpins * 360 - delta;
+  }
+
+  // Opacidade da face `index` conforme sua distância da frente:
+  // 1 para a face frontal, 0.4 para as vizinhas (esquerda/direita) e 0 para as demais.
+  function faceOpacity(index, seg, angle) {
+    var va = ((index * seg + angle) % 360 + 360) % 360;
+    var d = Math.min(va, 360 - va);
+    if (d <= seg * 0.5) return 1;
+    if (d <= seg * 1.5) return 0.4;
+    return 0;
   }
 
   return {
-    computeGeometry: computeGeometry,
     titleCaseFromFile: titleCaseFromFile,
     buildPeople: buildPeople,
     activeIndices: activeIndices,
     pickWinner: pickWinner,
-    computeTargetAngle: computeTargetAngle
+    computeTargetAngle: computeTargetAngle,
+    faceOpacity: faceOpacity
   };
 }));

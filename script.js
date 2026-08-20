@@ -22,20 +22,16 @@
     'paula-assis.jpg', 'rafael-soares.jpg', 'raquel-nicolau.jpg', 'rodrigo-dangelo.jpg',
     'rodrigo-teixeira.jpg', 'talissa-dahlke.jpg', 'thalyta-nascimento.jpg', 'washington-rodrigues.jpg'
   ];
-  var FACE = 105; // largura de cada face em px
+  var FACE = 150;    // largura de cada face (px)
+  var RADIUS = 280;  // raio do carrossel (px)
 
   var people = Roulette.buildPeople(FILES);
   var N = people.length;
-  var geometry = Roulette.computeGeometry(N, FACE);
-  var SEG = geometry.seg;
-  var RADIUS = geometry.radius;
-  var SCALE = RADIUS / 280;
+  var SEG = 360 / N; // passo angular entre faces
 
-  // geometria dinâmica (28 faces => raio ~466px) via variáveis CSS
   document.documentElement.style.setProperty('--face', FACE + 'px');
   document.documentElement.style.setProperty('--seg', SEG + 'deg');
   document.documentElement.style.setProperty('--radius', RADIUS + 'px');
-  document.documentElement.style.setProperty('--scale', SCALE);
 
   var piao = document.getElementById('piao');
   var faceFrag = document.createDocumentFragment();
@@ -55,10 +51,12 @@
   });
   piao.appendChild(faceFrag);
 
-  var muteBtn = document.querySelector('#mute');
+  var playBtn = document.getElementById('play');
+  var muteBtn = document.getElementById('mute');
   var audio = document.querySelector('audio');
   var sortearBtn = document.getElementById('sortear');
   var resultEl = document.getElementById('result');
+  var wrapper = document.getElementById('wrapper');
   var faces = Array.prototype.slice.call(document.querySelectorAll('#piao .face'));
 
   // seleção de participantes
@@ -76,10 +74,10 @@
   var SPEED = 360 / 4000;         // graus por ms (1 volta a cada 4s)
 
   var angle = 0;
-  var phase = 'select';           // select | idle | spinning | drawing | done
+  var phase = 'select';           // select | idle | spinning | paused | drawing | done
   var raf = null;
   var lastT = 0;
-  var drawTimer = null;
+  var muted = false;              // música ligada/desligada
 
   // estado dos efeitos (fogos + confetes)
   var particles = [];
@@ -95,11 +93,34 @@
   window.addEventListener('resize', resizeFx);
   resizeFx();
 
+  // responsivo: encolhe o carrossel para caber na tela (sem alterar o tamanho de projeto)
+  function fitToScreen() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var scale = Math.min(1, (w - 40) / 720, (h - 160) / 720);
+    if (scale < 0.35) scale = 0.35;
+    wrapper.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fitToScreen);
+  fitToScreen();
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function updateFacesVisibility() {
+    for (var i = 0; i < N; i++) {
+      faces[i].style.opacity = Roulette.faceOpacity(i, SEG, angle);
+    }
+  }
+
   function clearWinner() {
     faces.forEach(function (f) { f.classList.remove('winner'); });
   }
 
   function updateUI() {
+    playBtn.innerHTML = (phase === 'spinning') ? '❚❚' : '▶';
+
     if (phase === 'spinning') {
       sortearBtn.style.display = '';
       sortearBtn.textContent = 'Sortear';
@@ -108,6 +129,14 @@
       sortearBtn.textContent = 'Começar do zero';
     } else {
       sortearBtn.style.display = 'none';
+    }
+
+    // música toca durante o giro e a desaceleração, salvo se estiver mutado
+    if (muted || (phase !== 'spinning' && phase !== 'drawing')) {
+      audio.pause();
+    } else {
+      var p = audio.play();
+      if (p && p.catch) p.catch(function () {});
     }
   }
 
@@ -156,28 +185,37 @@
     lastT = now;
     angle -= SPEED * dt;
     piao.style.transform = 'rotateY(' + angle + 'deg)';
+    updateFacesVisibility();
     raf = requestAnimationFrame(loop);
   }
 
   function startSpinning() {
     cancelAnimationFrame(raf);
     phase = 'spinning';
-    piao.style.transition = 'none';
+    lastT = performance.now();
+    raf = requestAnimationFrame(loop);
+    updateUI();
+  }
+
+  function pauseSpin() {
+    cancelAnimationFrame(raf);
+    phase = 'paused';
+    updateUI();
+  }
+
+  function resumeSpin() {
+    phase = 'spinning';
     lastT = performance.now();
     raf = requestAnimationFrame(loop);
     updateUI();
   }
 
   function resetTo(phaseTarget, showPanel) {
-    audio.pause();
-    audio.currentTime = 0;
-    muteBtn.innerHTML = '▶';
     cancelAnimationFrame(raf);
-    clearTimeout(drawTimer);
     phase = phaseTarget;
     angle = 0;
-    piao.style.transition = 'none';
     piao.style.transform = 'rotateY(0deg)';
+    updateFacesVisibility();
     clearWinner();
     resultEl.innerHTML = '';
     clearFx();
@@ -209,22 +247,34 @@
       return;
     }
     var winner = Roulette.pickWinner(active);
-    var fullSpins = 4 + Math.floor(Math.random() * 3);
+    var fullSpins = 5 + Math.floor(Math.random() * 3); // 5 a 7 voltas
     var target = Roulette.computeTargetAngle(winner, SEG, angle, fullSpins);
-    angle = target;
 
-    var duration = 4000;
-    piao.style.transition = 'transform ' + duration + 'ms cubic-bezier(0.15, 0.85, 0.25, 1)';
-    piao.style.transform = 'rotateY(' + target + 'deg)';
+    var startAngle = angle;
+    var startTime = performance.now();
+    var duration = 6000; // desaceleração longa para suspense
 
-    drawTimer = setTimeout(function () {
-      phase = 'done';
-      clearWinner();
-      faces[winner].classList.add('winner');
-      resultEl.innerHTML = 'Sorteado: <strong>' + faces[winner].querySelector('.label').textContent + '</strong>';
-      launchCelebration();
-      updateUI();
-    }, duration + 60);
+    function step(now) {
+      var t = Math.min(1, (now - startTime) / duration);
+      var e = easeOut(t);
+      angle = startAngle + (target - startAngle) * e;
+      piao.style.transform = 'rotateY(' + angle + 'deg)';
+      updateFacesVisibility();
+      if (t < 1) {
+        raf = requestAnimationFrame(step);
+      } else {
+        angle = target;
+        piao.style.transform = 'rotateY(' + angle + 'deg)';
+        updateFacesVisibility();
+        phase = 'done';
+        clearWinner();
+        faces[winner].classList.add('winner');
+        resultEl.innerHTML = 'Sorteado: <strong>' + faces[winner].querySelector('.label').textContent + '</strong>';
+        launchCelebration();
+        updateUI();
+      }
+    }
+    raf = requestAnimationFrame(step);
   }
 
   // ---- fogos + confetes ----
@@ -336,16 +386,24 @@
     fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   }
 
-  // ▶ / ❚❚ : liga/desliga música + giro (stop volta tudo ao zero)
+  // ▶ / ❚❚ : rodar e pausar (retoma da mesma posição)
+  playBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    if (phase === 'spinning') {
+      pauseSpin();
+    } else if (phase === 'paused') {
+      resumeSpin();
+    } else if (phase === 'idle') {
+      startSpinning();
+    }
+  });
+
+  // ♪ : ligar/desligar a música (independente do giro)
   muteBtn.addEventListener('click', function (event) {
     event.preventDefault();
-    if (audio.paused) {
-      audio.play();
-      muteBtn.innerHTML = '❚❚';
-      startSpinning();
-    } else {
-      fullReset();
-    }
+    muted = !muted;
+    muteBtn.classList.toggle('muted', muted);
+    updateUI();
   });
 
   // "Sortear" / "Começar do zero"
@@ -384,4 +442,5 @@
 
   buildSelector();
   updateUI();
+  updateFacesVisibility();
 }());

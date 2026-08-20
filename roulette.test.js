@@ -4,18 +4,6 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Roulette = require('./logic.js');
 
-test('computeGeometry: 12 faces de 150px', () => {
-  const g = Roulette.computeGeometry(12, 150);
-  assert.ok(Math.abs(g.radius - 280) < 0.1, `raio esperado ~280, veio ${g.radius}`);
-  assert.strictEqual(g.seg, 30);
-});
-
-test('computeGeometry: 28 faces de 105px', () => {
-  const g = Roulette.computeGeometry(28, 105);
-  assert.ok(Math.abs(g.radius - 465.7) < 1, `raio esperado ~465.7, veio ${g.radius}`);
-  assert.ok(Math.abs(g.seg - 12.857142857) < 0.001, `seg esperado ~12.857, veio ${g.seg}`);
-});
-
 test('titleCaseFromFile: converte kebab-case sem acentos', () => {
   assert.strictEqual(Roulette.titleCaseFromFile('celso-fabri.jpg'), 'Celso Fabri');
   assert.strictEqual(Roulette.titleCaseFromFile('rodrigo-dangelo.jpg'), 'Rodrigo Dangelo');
@@ -44,10 +32,9 @@ test('pickWinner: respeita o rand e o conjunto ativo', () => {
 });
 
 test('computeTargetAngle: deixa a face sorteada de frente', () => {
-  // winner=3, seg=30 => face frontal quando (3*30 + target) % 360 == 0
   const target = Roulette.computeTargetAngle(3, 30, 0, 4);
-  const mod = ((3 * 30 + target) % 360 + 360) % 360;
-  assert.ok(mod < 1e-9, `face 3 não está de frente (mod=${mod})`);
+  const diff = Math.abs((3 * 30 + target) / 360 - Math.round((3 * 30 + target) / 360)) * 360;
+  assert.ok(diff < 1e-9, `face 3 não está de frente (diff=${diff})`);
 });
 
 test('computeTargetAngle: funciona para qualquer vencedor e ângulo atual', () => {
@@ -58,9 +45,28 @@ test('computeTargetAngle: funciona para qualquer vencedor e ângulo atual', () =
     const fullSpins = 5;
     const target = Roulette.computeTargetAngle(w, seg, currentAngle, fullSpins);
     const total = w * seg + target;
-    // distância até o múltiplo de 360 mais próximo (deve ser ~0)
     const diff = Math.abs(total / 360 - Math.round(total / 360)) * 360;
     assert.ok(diff < 1e-6, `face ${w} não está de frente (diff=${diff})`);
-    assert.ok(target >= currentAngle, `alvo ${target} não avança a partir de ${currentAngle}`);
+    assert.ok(target < currentAngle, `alvo ${target} não retrocede a partir de ${currentAngle}`);
   }
+});
+
+test('computeTargetAngle: gira no sentido decrescente e não zera a volta', () => {
+  // face 0 já alinhada: mesmo assim deve girar uma volta completa a mais
+  const target = Roulette.computeTargetAngle(0, 30, 0, 4);
+  assert.strictEqual(target, -1800);
+  const diff = Math.abs((0 * 30 + target) / 360 - Math.round((0 * 30 + target) / 360)) * 360;
+  assert.ok(diff < 1e-9);
+});
+
+test('faceOpacity: frontal=1, vizinhas=0.4, demais=0', () => {
+  const seg = 360 / 29;
+  const angle = -5 * seg; // face 5 de frente
+  assert.strictEqual(Roulette.faceOpacity(5, seg, angle), 1);
+  assert.strictEqual(Roulette.faceOpacity(4, seg, angle), 0.4);
+  assert.strictEqual(Roulette.faceOpacity(6, seg, angle), 0.4);
+  assert.strictEqual(Roulette.faceOpacity(3, seg, angle), 0);
+  assert.strictEqual(Roulette.faceOpacity(7, seg, angle), 0);
+  // uma volta completa não muda a face frontal
+  assert.strictEqual(Roulette.faceOpacity(5, seg, angle + 360), 1);
 });
