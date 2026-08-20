@@ -22,23 +22,21 @@
     'paula-assis.jpg', 'rafael-soares.jpg', 'raquel-nicolau.jpg', 'rodrigo-dangelo.jpg',
     'rodrigo-teixeira.jpg', 'talissa-dahlke.jpg', 'thalyta-nascimento.jpg', 'washington-rodrigues.jpg'
   ];
-  var FACE = 150;    // largura de cada face (px)
-  var RADIUS = 280;  // raio do carrossel (px)
+  var FACE = 150;          // largura de cada face (px)
+  var RADIUS = 280;        // raio do carrossel (px)
+  var SEG_VISUAL = 30;     // espaçamento visual (graus) entre a face central e as laterais
 
   var people = Roulette.buildPeople(FILES);
   var N = people.length;
-  var SEG = 360 / N; // passo angular entre faces
+  var SEG = 360 / N;       // passo angular real (giro e sorteio)
 
   document.documentElement.style.setProperty('--face', FACE + 'px');
-  document.documentElement.style.setProperty('--seg', SEG + 'deg');
-  document.documentElement.style.setProperty('--radius', RADIUS + 'px');
 
   var piao = document.getElementById('piao');
   var faceFrag = document.createDocumentFragment();
   people.forEach(function (p, i) {
     var face = document.createElement('div');
     face.className = 'face';
-    face.style.setProperty('--i', i);
     var img = document.createElement('img');
     img.src = 'fotos/' + p.file;
     img.alt = p.name;
@@ -108,9 +106,12 @@
     return 1 - Math.pow(1 - t, 4);
   }
 
-  function updateFacesVisibility() {
+  function updateFaces() {
     for (var i = 0; i < N; i++) {
-      faces[i].style.opacity = Roulette.faceOpacity(i, SEG, angle);
+      var off = Roulette.coverflowOffset(i, SEG, angle, N);
+      faces[i].style.opacity = Roulette.coverflowOpacity(off);
+      faces[i].style.transform =
+        'rotateY(' + (off * SEG_VISUAL).toFixed(2) + 'deg) translateZ(' + RADIUS + 'px)';
     }
   }
 
@@ -184,8 +185,7 @@
     var dt = now - lastT;
     lastT = now;
     angle -= SPEED * dt;
-    piao.style.transform = 'rotateY(' + angle + 'deg)';
-    updateFacesVisibility();
+    updateFaces();
     raf = requestAnimationFrame(loop);
   }
 
@@ -214,8 +214,7 @@
     cancelAnimationFrame(raf);
     phase = phaseTarget;
     angle = 0;
-    piao.style.transform = 'rotateY(0deg)';
-    updateFacesVisibility();
+    updateFaces();
     clearWinner();
     resultEl.innerHTML = '';
     clearFx();
@@ -258,14 +257,12 @@
       var t = Math.min(1, (now - startTime) / duration);
       var e = easeOut(t);
       angle = startAngle + (target - startAngle) * e;
-      piao.style.transform = 'rotateY(' + angle + 'deg)';
-      updateFacesVisibility();
+      updateFaces();
       if (t < 1) {
         raf = requestAnimationFrame(step);
       } else {
         angle = target;
-        piao.style.transform = 'rotateY(' + angle + 'deg)';
-        updateFacesVisibility();
+        updateFaces();
         phase = 'done';
         clearWinner();
         faces[winner].classList.add('winner');
@@ -442,5 +439,5 @@
 
   buildSelector();
   updateUI();
-  updateFacesVisibility();
+  updateFaces();
 }());

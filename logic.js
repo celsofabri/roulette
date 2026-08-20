@@ -57,13 +57,22 @@
     return currentAngle - fullSpins * 360 - delta;
   }
 
-  // Opacidade da face `index` conforme sua distância da frente:
-  // 1 para a face frontal, 0.4 para as vizinhas (esquerda/direita) e 0 para as demais.
-  function faceOpacity(index, seg, angle) {
-    var va = ((index * seg + angle) % 360 + 360) % 360;
-    var d = Math.min(va, 360 - va);
-    if (d <= seg * 0.5) return 1;
-    if (d <= seg * 1.5) return 0.4;
+  // Deslocamento fracionário (contínuo) da face `index` em relação à frente,
+  // medido em "slots" dentro do intervalo [-n/2, n/2). A face frontal tem
+  // offset ≈ 0, as vizinhas ≈ ±1 e a face oposta ≈ ±n/2.
+  function coverflowOffset(index, seg, angle, n) {
+    var front = -angle / seg;
+    var off = index - front;
+    var half = n / 2;
+    off = ((off + half) % n + n) % n - half;
+    return off;
+  }
+
+  // Opacidade contínua do coverflow: 1 na frente, 0.5 nas vizinhas e 0 nas demais.
+  function coverflowOpacity(offset) {
+    var d = Math.abs(offset);
+    if (d <= 0.5) return 1;
+    if (d <= 1.5) return 0.5;
     return 0;
   }
 
@@ -73,6 +82,7 @@
     activeIndices: activeIndices,
     pickWinner: pickWinner,
     computeTargetAngle: computeTargetAngle,
-    faceOpacity: faceOpacity
+    coverflowOffset: coverflowOffset,
+    coverflowOpacity: coverflowOpacity
   };
 }));

@@ -2,8 +2,6 @@
 ---------------------------------------- */
 :root {
   --face: 150px;
-  --seg: 30deg;
-  --radius: 280px;
 }
 
 html {
@@ -79,9 +77,6 @@ body {
     -webkit-backface-visibility: hidden;
     -moz-backface-visibility: hidden;
     backface-visibility: hidden;
-    -webkit-transform: rotateY(calc(var(--i, 0) * var(--seg))) translateZ(var(--radius));
-    -moz-transform: rotateY(calc(var(--i, 0) * var(--seg))) translateZ(var(--radius));
-    transform: rotateY(calc(var(--i, 0) * var(--seg))) translateZ(var(--radius));
   }
 
     #piao .face img {

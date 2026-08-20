@@ -59,14 +59,28 @@ test('computeTargetAngle: gira no sentido decrescente e não zera a volta', () =
   assert.ok(diff < 1e-9);
 });
 
-test('faceOpacity: frontal=1, vizinhas=0.4, demais=0', () => {
-  const seg = 360 / 29;
-  const angle = -5 * seg; // face 5 de frente
-  assert.strictEqual(Roulette.faceOpacity(5, seg, angle), 1);
-  assert.strictEqual(Roulette.faceOpacity(4, seg, angle), 0.4);
-  assert.strictEqual(Roulette.faceOpacity(6, seg, angle), 0.4);
-  assert.strictEqual(Roulette.faceOpacity(3, seg, angle), 0);
-  assert.strictEqual(Roulette.faceOpacity(7, seg, angle), 0);
-  // uma volta completa não muda a face frontal
-  assert.strictEqual(Roulette.faceOpacity(5, seg, angle + 360), 1);
+test('coverflowOffset: frente=0, vizinhas=±1 e opostas no fundo', () => {
+  const n = 29;
+  const seg = 360 / n;
+  assert.strictEqual(Roulette.coverflowOffset(0, seg, 0, n), 0);
+  assert.strictEqual(Roulette.coverflowOffset(1, seg, 0, n), 1);
+  assert.strictEqual(Roulette.coverflowOffset(28, seg, 0, n), -1);
+  // as faces opostas ficam longe da frente (|offset| ≈ 14)
+  assert.ok(Math.abs(Roulette.coverflowOffset(14, seg, 0, n)) > 13);
+  assert.ok(Math.abs(Roulette.coverflowOffset(15, seg, 0, n)) > 13);
+});
+
+test('coverflowOffset: uma volta completa retorna à mesma face', () => {
+  const n = 29;
+  const seg = 360 / n;
+  assert.ok(Math.abs(Roulette.coverflowOffset(0, seg, -360, n)) < 1e-9);
+});
+
+test('coverflowOpacity: centro=1, vizinhas=0.5, demais=0', () => {
+  assert.strictEqual(Roulette.coverflowOpacity(0), 1);
+  assert.strictEqual(Roulette.coverflowOpacity(0.4), 1);
+  assert.strictEqual(Roulette.coverflowOpacity(1), 0.5);
+  assert.strictEqual(Roulette.coverflowOpacity(-1), 0.5);
+  assert.strictEqual(Roulette.coverflowOpacity(1.5), 0.5);
+  assert.strictEqual(Roulette.coverflowOpacity(2), 0);
 });
