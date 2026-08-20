@@ -76,11 +76,13 @@ test('coverflowOffset: uma volta completa retorna à mesma face', () => {
   assert.ok(Math.abs(Roulette.coverflowOffset(0, seg, -360, n)) < 1e-9);
 });
 
-test('coverflowOpacity: centro=1, vizinhas=0.5, demais=0', () => {
+test('coverflowOpacity: centro=1, 1ª camada=0.5, 2ª camada=0.25, demais=0', () => {
   assert.strictEqual(Roulette.coverflowOpacity(0), 1);
   assert.strictEqual(Roulette.coverflowOpacity(0.4), 1);
   assert.strictEqual(Roulette.coverflowOpacity(1), 0.5);
   assert.strictEqual(Roulette.coverflowOpacity(-1), 0.5);
-  assert.strictEqual(Roulette.coverflowOpacity(1.5), 0.5);
-  assert.strictEqual(Roulette.coverflowOpacity(2), 0);
+  assert.strictEqual(Roulette.coverflowOpacity(2), 0.25);
+  assert.strictEqual(Roulette.coverflowOpacity(-2), 0.25);
+  assert.strictEqual(Roulette.coverflowOpacity(2.5), 0.25);
+  assert.strictEqual(Roulette.coverflowOpacity(3), 0);
 });

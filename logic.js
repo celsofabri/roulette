@@ -68,11 +68,13 @@
     return off;
   }
 
-  // Opacidade contínua do coverflow: 1 na frente, 0.5 nas vizinhas e 0 nas demais.
+  // Opacidade contínua do coverflow: 1 na frente, 0.5 na 1ª camada lateral,
+  // 0.25 na 2ª camada (duas fotos de cada lado) e 0 nas demais.
   function coverflowOpacity(offset) {
     var d = Math.abs(offset);
     if (d <= 0.5) return 1;
     if (d <= 1.5) return 0.5;
+    if (d <= 2.5) return 0.25;
     return 0;
   }
 
