@@ -20,7 +20,7 @@
     'joao-bonucci.png', 'leonardo-lopes.png', 'luciana-correa.png', 'luisa-larrieu.png',
     'luiz-costa.png', 'maria-nunes.jpg', 'matheus-cabral.jpg', 'monia-lodo.png',
     'paula-assis.jpg', 'rafael-soares.jpg', 'raquel-nicolau.jpg', 'rodrigo-dangelo.jpg',
-    'rodrigo-teixeira.jpg', 'talissa-dahlke.jpg', 'thalyta-nascimento.jpg', 'washington-rodrigues.jpg'
+    'rodrigo-teixeira.jpg', 'talissa-dahlke.jpg', 'thalyta-nascimento.jpg', 'vitor-shoji.jpg', 'washington-rodrigues.jpg'
   ];
   var FACE = 150;          // largura de cada face (px)
   var RADIUS = 280;        // raio do carrossel (px)
