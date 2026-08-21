@@ -132,8 +132,8 @@
       sortearBtn.style.display = 'none';
     }
 
-    // música toca durante o giro e a desaceleração, salvo se estiver mutado
-    if (muted || (phase !== 'spinning' && phase !== 'drawing')) {
+    // música toca durante o giro, a desaceleração e após o sorteio, salvo se estiver mutado
+    if (muted || (phase !== 'spinning' && phase !== 'drawing' && phase !== 'done')) {
       audio.pause();
     } else {
       var p = audio.play();
