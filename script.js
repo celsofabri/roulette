@@ -25,37 +25,18 @@
   var FACE = 150;          // largura de cada face (px)
   var RADIUS = 280;        // raio do carrossel (px)
   var SEG_VISUAL = 30;     // espaçamento visual (graus) entre a face central e as laterais
-
-  var people = Roulette.buildPeople(FILES);
-  var N = people.length;
-  var SEG = 360 / N;       // passo angular real (giro e sorteio)
+  var PASSWORD = '123faster';
 
   document.documentElement.style.setProperty('--face', FACE + 'px');
 
+  // palco e controles
   var piao = document.getElementById('piao');
-  var faceFrag = document.createDocumentFragment();
-  people.forEach(function (p, i) {
-    var face = document.createElement('div');
-    face.className = 'face';
-    var img = document.createElement('img');
-    img.src = 'fotos/' + p.file;
-    img.alt = p.name;
-    var label = document.createElement('span');
-    label.className = 'label';
-    label.textContent = p.name;
-    face.appendChild(img);
-    face.appendChild(label);
-    faceFrag.appendChild(face);
-  });
-  piao.appendChild(faceFrag);
-
   var playBtn = document.getElementById('play');
   var muteBtn = document.getElementById('mute');
   var audio = document.querySelector('audio');
   var sortearBtn = document.getElementById('sortear');
   var resultEl = document.getElementById('result');
   var wrapper = document.getElementById('wrapper');
-  var faces = Array.prototype.slice.call(document.querySelectorAll('#piao .face'));
 
   // seleção de participantes
   var selectorEl = document.getElementById('selector');
@@ -64,18 +45,36 @@
   var selectAllBtn = document.getElementById('select-all');
   var selectNoneBtn = document.getElementById('select-none');
   var participantsBtn = document.getElementById('participants');
-  var selected = faces.map(function () { return true; }); // todos marcados por padrão
+
+  // telas de abertura
+  var landingEl = document.getElementById('landing');
+  var gateEl = document.getElementById('gate');
+  var builderEl = document.getElementById('builder');
+  var modeCustomBtn = document.getElementById('mode-custom');
+  var modeFasterBtn = document.getElementById('mode-faster');
+  var gateBackBtn = document.getElementById('gate-back');
+  var gateEnterBtn = document.getElementById('gate-enter');
+  var gatePasswordEl = document.getElementById('gate-password');
+  var gateErrorEl = document.getElementById('gate-error');
+  var builderBackBtn = document.getElementById('builder-back');
+  var builderStartBtn = document.getElementById('builder-start');
+  var builderNamesEl = document.getElementById('builder-names');
 
   var fxCanvas = document.getElementById('fx');
   var fxCtx = fxCanvas.getContext('2d');
 
-  var SPEED = 360 / 4000;         // graus por ms (1 volta a cada 4s)
-
+  // estado do carrossel
+  var people = [];
+  var N = 0;
+  var SEG = 0;
+  var faces = [];
+  var selected = [];
   var angle = 0;
-  var phase = 'select';           // select | idle | spinning | paused | drawing | done
+  var phase = 'idle';           // idle | spinning | paused | drawing | done | select
   var raf = null;
   var lastT = 0;
-  var muted = false;              // música ligada/desligada
+  var muted = false;
+  var SPEED = 360 / 4000;       // graus por ms (1 volta a cada 4s)
 
   // estado dos efeitos (fogos + confetes)
   var particles = [];
@@ -104,6 +103,45 @@
 
   function easeOut(t) {
     return 1 - Math.pow(1 - t, 4);
+  }
+
+  // ---- montagem do carrossel ----
+  function buildFaces(showPhotos) {
+    piao.innerHTML = '';
+    var frag = document.createDocumentFragment();
+    people.forEach(function (p) {
+      var face = document.createElement('div');
+      face.className = 'face ' + (showPhotos ? 'photo' : 'name-only');
+      face.setAttribute('data-name', p.name);
+      if (showPhotos) {
+        var img = document.createElement('img');
+        img.src = 'fotos/' + p.file;
+        img.alt = p.name;
+        var label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = p.name;
+        face.appendChild(img);
+        face.appendChild(label);
+      } else {
+        var nameEl = document.createElement('span');
+        nameEl.className = 'name';
+        nameEl.textContent = p.name;
+        face.appendChild(nameEl);
+      }
+      frag.appendChild(face);
+    });
+    piao.appendChild(frag);
+  }
+
+  function setupWheel(peopleList, showPhotos) {
+    people = peopleList;
+    N = people.length;
+    SEG = 360 / N;
+    buildFaces(showPhotos);
+    faces = Array.prototype.slice.call(document.querySelectorAll('#piao .face'));
+    selected = faces.map(function () { return true; });
+    buildSelector(showPhotos);
+    resetTo('idle', false);
   }
 
   function updateFaces() {
@@ -159,17 +197,24 @@
     confirmBtn.disabled = count === 0;
   }
 
-  function buildSelector() {
+  function buildSelector(showPhotos) {
     selectorGrid.innerHTML = '';
     faces.forEach(function (f, i) {
-      var name = f.querySelector('.label').textContent;
-      var imgSrc = f.querySelector('img').getAttribute('src');
+      var name = f.getAttribute('data-name');
       var p = document.createElement('div');
       p.className = 'person selected';
-      p.innerHTML =
-        '<img src="' + imgSrc + '" alt="' + name + '">' +
-        '<div class="name">' + name + '</div>' +
-        '<div class="check">&#10003;</div>';
+      if (showPhotos) {
+        var imgSrc = f.querySelector('img').getAttribute('src');
+        p.innerHTML =
+          '<img src="' + imgSrc + '" alt="' + name + '">' +
+          '<div class="name">' + name + '</div>' +
+          '<div class="check">&#10003;</div>';
+      } else {
+        p.classList.add('no-photo');
+        p.innerHTML =
+          '<div class="name">' + name + '</div>' +
+          '<div class="check">&#10003;</div>';
+      }
       p.addEventListener('click', function () {
         selected[i] = !selected[i];
         p.classList.toggle('selected', selected[i]);
@@ -266,7 +311,7 @@
         phase = 'done';
         clearWinner();
         faces[winner].classList.add('winner');
-        resultEl.innerHTML = 'Sorteado: <strong>' + faces[winner].querySelector('.label').textContent + '</strong>';
+        resultEl.innerHTML = 'Sorteado: <strong>' + faces[winner].getAttribute('data-name') + '</strong>';
         launchCelebration();
         updateUI();
       }
@@ -383,6 +428,14 @@
     fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   }
 
+  // ---- abertura: alternância entre as telas ----
+  function showOverlay(el) {
+    landingEl.classList.add('hidden');
+    gateEl.classList.add('hidden');
+    builderEl.classList.add('hidden');
+    if (el) el.classList.remove('hidden');
+  }
+
   // ▶ / ❚❚ : rodar e pausar (retoma da mesma posição)
   playBtn.addEventListener('click', function (event) {
     event.preventDefault();
@@ -437,7 +490,52 @@
     applySelection();
   });
 
-  buildSelector();
-  updateUI();
-  updateFaces();
+  // fluxo 1: criar lista de participantes (só nomes)
+  modeCustomBtn.addEventListener('click', function () {
+    showOverlay(builderEl);
+    builderNamesEl.value = '';
+    builderNamesEl.focus();
+  });
+
+  builderBackBtn.addEventListener('click', function () {
+    showOverlay(landingEl);
+  });
+
+  builderStartBtn.addEventListener('click', function () {
+    var peopleList = Roulette.parseNames(builderNamesEl.value);
+    if (peopleList.length === 0) return;
+    setupWheel(peopleList, false);
+    showOverlay(null);
+  });
+
+  // fluxo 2: Roleta Faster (com fotos, protegida por senha)
+  modeFasterBtn.addEventListener('click', function () {
+    showOverlay(gateEl);
+    gatePasswordEl.value = '';
+    gateErrorEl.classList.add('hidden');
+    gatePasswordEl.focus();
+  });
+
+  gateBackBtn.addEventListener('click', function () {
+    showOverlay(landingEl);
+  });
+
+  function tryPassword() {
+    if (gatePasswordEl.value === PASSWORD) {
+      setupWheel(Roulette.buildPeople(FILES), true);
+      showOverlay(null);
+    } else {
+      gateErrorEl.classList.remove('hidden');
+      gatePasswordEl.value = '';
+      gatePasswordEl.focus();
+    }
+  }
+
+  gateEnterBtn.addEventListener('click', tryPassword);
+  gatePasswordEl.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') tryPassword();
+  });
+
+  // estado inicial: tela de abertura
+  showOverlay(landingEl);
 }());

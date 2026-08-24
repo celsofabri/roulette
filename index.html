@@ -37,7 +37,7 @@
   <canvas id="fx"></canvas>
 
   <!-- seleção de participantes -->
-  <div id="selector">
+  <div id="selector" class="hidden">
     <div class="panel">
       <h2>Quem participa do sorteio?</h2>
       <p class="sub">Toque nas pessoas para marcar ou desmarcar.</p>
@@ -46,6 +46,45 @@
         <button type="button" id="select-all">Marcar todos</button>
         <button type="button" id="select-none">Desmarcar todos</button>
         <button type="button" id="confirm">Começar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- abertura: escolha do fluxo -->
+  <div id="landing" class="overlay">
+    <div class="panel">
+      <h1>Roleta da Sorte</h1>
+      <p class="sub">Escolha como quer sortear</p>
+      <div class="actions">
+        <button type="button" class="primary" id="mode-custom">Criar lista de participantes</button>
+        <button type="button" class="ghost" id="mode-faster">Roleta Faster</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- senha da Roleta Faster -->
+  <div id="gate" class="overlay hidden">
+    <div class="panel">
+      <h2>Roleta Faster</h2>
+      <p class="sub">Digite a senha para acessar</p>
+      <input type="password" id="gate-password" placeholder="Senha" autocomplete="off">
+      <div id="gate-error" class="error hidden">Senha incorreta</div>
+      <div class="actions">
+        <button type="button" class="ghost" id="gate-back">Voltar</button>
+        <button type="button" class="primary" id="gate-enter">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- criação da lista -->
+  <div id="builder" class="overlay hidden">
+    <div class="panel">
+      <h2>Criar lista de participantes</h2>
+      <p class="sub">Digite um nome por linha</p>
+      <textarea id="builder-names" placeholder="Ana&#10;Bruno&#10;Carla"></textarea>
+      <div class="actions">
+        <button type="button" class="ghost" id="builder-back">Voltar</button>
+        <button type="button" class="primary" id="builder-start">Começar</button>
       </div>
     </div>
   </div>

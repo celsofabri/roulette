@@ -76,6 +76,19 @@ test('coverflowOffset: uma volta completa retorna à mesma face', () => {
   assert.ok(Math.abs(Roulette.coverflowOffset(0, seg, -360, n)) < 1e-9);
 });
 
+test('parseNames: um nome por linha, ignora vazios e espaços', () => {
+  assert.deepStrictEqual(Roulette.parseNames('Ana\nBruno\nCarla'), [
+    { name: 'Ana' },
+    { name: 'Bruno' },
+    { name: 'Carla' }
+  ]);
+  assert.deepStrictEqual(Roulette.parseNames('  Ana  \n\n  Bruno \r\n'), [
+    { name: 'Ana' },
+    { name: 'Bruno' }
+  ]);
+  assert.deepStrictEqual(Roulette.parseNames('   \n\n'), []);
+});
+
 test('coverflowOpacity: centro=1, 1ª camada=0.5, 2ª camada=0.25, demais=0', () => {
   assert.strictEqual(Roulette.coverflowOpacity(0), 1);
   assert.strictEqual(Roulette.coverflowOpacity(0.4), 1);

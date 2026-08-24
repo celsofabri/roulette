@@ -78,6 +78,18 @@
     return 0;
   }
 
+  // Converte um texto (um nome por linha) numa lista de participantes { name },
+  // ignorando linhas vazias e espaços ao redor.
+  function parseNames(text) {
+    var lines = String(text).split(/\r?\n/);
+    var out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var name = lines[i].trim();
+      if (name) out.push({ name: name });
+    }
+    return out;
+  }
+
   return {
     titleCaseFromFile: titleCaseFromFile,
     buildPeople: buildPeople,
@@ -85,6 +97,7 @@
     pickWinner: pickWinner,
     computeTargetAngle: computeTargetAngle,
     coverflowOffset: coverflowOffset,
-    coverflowOpacity: coverflowOpacity
+    coverflowOpacity: coverflowOpacity,
+    parseNames: parseNames
   };
 }));
