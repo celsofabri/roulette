@@ -1,0 +1,19 @@
+script.js
+  s_c8ec04e18ef17e::t_872b45dfe54fc4 17-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "16baef36205f835ffe6fc6e66f6fe5811384377e",
+  "prompts": {},
+  "sessions": {
+    "s_c8ec04e18ef17e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "de16bbf8-e3c1-4b03-8acd-c98067dc504c",
+        "model": "deepseek-v4-pro-0813"
+      },
+      "human_author": "Celso Fabri Junior <celso.fabri@ifood.com.br>"
+    }
+  }
+}
