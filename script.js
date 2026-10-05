@@ -14,13 +14,10 @@
 
 (function () {
   var FILES = [
-    'carla-joia.png', 'carolina-ovidio.jpg', 'celso-fabri.jpg', 'david-rezende.png',
-    'debora-ellen.jpg', 'douglas-queiroz.jpg', 'euller-nobrega.jpg', 'gabrielly-silva.png', 'glaide-oliveira.jpg',
-    'guilherme-hernandez.jpg', 'helena-dantas.jpg', 'henrique-morbin.jpg', 'jessica-rodrigues.png',
-    'joao-bonucci.png', 'leonardo-lopes.png', 'luciana-correa.png', 'luisa-larrieu.png',
-    'luiz-costa.png', 'maria-nunes.jpg', 'matheus-cabral.jpg', 'monia-lodo.png',
-    'paula-assis.jpg', 'rafael-soares.jpg', 'raquel-nicolau.jpg', 'rodrigo-dangelo.jpg',
-    'rodrigo-teixeira.jpg', 'talissa-dahlke.jpg', 'thalyta-nascimento.jpg', 'vitor-shoji.jpg', 'washington-rodrigues.jpg'
+    'carla-joia.png', 'celso-fabri.jpg', 'david-rezende.png', 'debora-ellen.jpg',
+    'douglas-queiroz.jpg', 'gabrielly-silva.png', 'glenda-faria.png', 'guilherme-hernandez.jpg',
+    'luciana-correa.png', 'luisa-larrieu.png', 'paula-assis.jpg', 'talissa-dahlke.jpg',
+    'thalyta-nascimento.jpg', 'vitor-shoji.jpg'
   ];
   var FACE = 150;          // largura de cada face (px)
   var RADIUS = 280;        // raio do carrossel (px)
